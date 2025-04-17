@@ -4,8 +4,12 @@ import { CreateCustomerBody } from './types/customer';
 import dotenv from 'dotenv';
 import { startCleanupJob } from './cron/cleanup';
 import jwt from "jsonwebtoken";
-import { isCreateCustomerBody } from './utils/typeGuards';
+import { validateCreateCustomer } from './middlewares/validators';
+import { isEmailVerificationPayload } from './utils/typeGuards';
+
 dotenv.config();
+const app = express();
+app.use(express.json());
 
 if (!process.env.JWT_SECRET) {
   throw new Error("Missing JWT_SECRET in environment variables");
@@ -16,8 +20,6 @@ const TOKEN_EXPIRATION = "24h";
 // import { requireEnv, requireNumberEnv } from './utils/env';
 import nodemailer from 'nodemailer';
 
-
-
     const transporter= nodemailer.createTransport({
       service:"gmail",
       auth:{
@@ -25,10 +27,7 @@ import nodemailer from 'nodemailer';
         pass:process.env.EMAIL_PASS,
       }
     });
-    
 
-const app = express();
-app.use(express.json());
 const prisma = new PrismaClient();
 
 const PORT = 3000;
@@ -43,41 +42,70 @@ app.get('/customers',async (_req,res)=>{
     res.json(users);
 });
 
-app.post("/signup", async (    req: Request<Record<string, unknown>, unknown, unknown>,
-  res: Response)=>{
-  if (!isCreateCustomerBody(req.body)) {
-  return res.status(400).json({ message: "Invalid request body" });
-  }
-  const {firstName, lastName, email} = req.body;
-  try {
-    const token = jwt.sign({firstName,lastName,email}, SECRET_KEY, {expiresIn: TOKEN_EXPIRATION});
-    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify your email",
-      text: `Hello ${firstName} \n\nPlease click on the link to verify your email:\n${verificationLink}`
-    });
-    res.status(200).json({message:"verification email sent"});
-  } catch (error){
-    res.status(500).json({ message: "Error during signup", error });
-  }
-});
+app.post("/signup",validateCreateCustomer, async (req:Request<Record<string, unknown>, Record<string, unknown>,CreateCustomerBody>, res:Response) => {
 
-app.post('/customers', async (req:Request<Record<string, unknown>, Record<string, unknown>,CreateCustomerBody>, res:Response)=>{
-    const {firstName, lastName, email} = req.body;
+    const { firstName, lastName, email } = req.body;
+
+    try {
+      const token = jwt.sign({ firstName, lastName, email }, SECRET_KEY, {
+        expiresIn: TOKEN_EXPIRATION,
+      });
+
+      const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Verify your email",
+        text: `Hello ${firstName}\n\nPlease click on the link to verify your email:\n${verificationLink}`,
+      });
+
+      res.status(200).json({ message: "Verification email sent" });
+    } catch (error) {
+      console.error("Signup error:", error);
+      res.status(500).json({ message: "Error during signup", error });
+    }
+  }
+);
+
+app.get('/verify-email', async (req,res)=>{
+  
+
+    const {token} = req.query;
+
+    if (typeof token !== 'string') {
+      res.status(400).json({ message: "Invalid token format" });
+      return;
+    }
+
     try{
+        const payload = jwt.verify(token,SECRET_KEY);
+
+        // verify token
+        if (!isEmailVerificationPayload(payload)) {
+          res.status(400).json({ message: "Invalid token payload" });
+          return;
+        }
+
+        const user = await prisma.customer.create({
+        data:{
+          firstName: payload.firstName,
+          lastName:payload.lastName,
+          email:payload.email,
+          emailVerified:true,
+        }
+    });
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
-          to: email,
+          to: payload.email,
           subject:"welcome",
-          text:`hello ${firstName}, thanks for signing up`
+          text:`hello ${payload.firstName}, thanks for signing up`
         });
-        const user = await prisma.customer.create({
-        data:{firstName,lastName,email}
-    });
-    res.json(user);} catch (error) {
-        res.status(500).json({message: "Error signing up", error});
+
+    res.json(user);
+
+  } catch (error) {
+        res.status(500).json({message: "invalid or expired token", error});
     }
 });
 
