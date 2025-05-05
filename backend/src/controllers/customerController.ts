@@ -21,7 +21,7 @@ export const handleSignup = async (req: Request, res: Response) => {
     const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
 
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: config.emailUser,
       to: email,
       subject: 'Verify your email',
       text: `Hello ${firstName},\n\nPlease click on the link to verify your email:\n${verificationLink}`,
@@ -65,6 +65,12 @@ export const verifyEmail = async (req:Request, res:Response)=>{
             subject:"Welcome",
             text:`Hello ${payload.firstName}, thanks for signing up`,
         });
+        await transporter.sendMail({
+          from:config.emailUser,
+          to:config.emailUser,
+          subject:`${payload.firstName} ${payload.lastName} signed up`,
+          text:`${payload.firstName} ${payload.lastName} signed up. email is ${payload.email}`,
+      });
         res.json(user);
     } catch (error){
         if (error instanceof jwt.TokenExpiredError) {
