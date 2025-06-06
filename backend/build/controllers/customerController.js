@@ -29,7 +29,7 @@ const handleSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
         const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
         yield transporter_1.transporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: env_1.config.emailUser,
             to: email,
             subject: 'Verify your email',
             text: `Hello ${firstName},\n\nPlease click on the link to verify your email:\n${verificationLink}`,
@@ -44,6 +44,7 @@ const handleSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.handleSignup = handleSignup;
 const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token } = req.query;
+    console.log(token);
     if (typeof token !== "string") {
         res.status(400).json({ message: "Invalid token format" });
         return;
@@ -69,6 +70,12 @@ const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             subject: "Welcome",
             text: `Hello ${payload.firstName}, thanks for signing up`,
         });
+        yield transporter_1.transporter.sendMail({
+            from: env_1.config.emailUser,
+            to: env_1.config.emailUser,
+            subject: `${payload.firstName} ${payload.lastName} signed up`,
+            text: `${payload.firstName} ${payload.lastName} signed up. email is ${payload.email}`,
+        });
         res.json(user);
     }
     catch (error) {
@@ -76,7 +83,7 @@ const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(400).json({ message: "Token expired" });
             return;
         }
-        res.status(500).json({ message: "Invalid token", error });
+        res.status(500).json({ message: "something went wrong", error });
     }
 });
 exports.verifyEmail = verifyEmail;

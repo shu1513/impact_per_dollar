@@ -36,6 +36,7 @@ export const handleSignup = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req:Request, res:Response)=>{
     const {token}= req.query;
+    console.log(token);
     if (typeof token !== "string") {
         res.status(400).json({message:"Invalid token format"});
         return;
@@ -77,7 +78,7 @@ export const verifyEmail = async (req:Request, res:Response)=>{
             res.status(400).json({ message: "Token expired" });
             return;
         }
-        res.status(500).json({ message: "Invalid token", error });
+        res.status(500).json({ message: "something went wrong", error });
     }
 
 };
