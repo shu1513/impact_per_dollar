@@ -6,6 +6,8 @@ import { config } from '../config/env';
 import { isEmailVerificationPayload } from '../utils/typeGuards';
 import { prisma } from '../config/prisma';
 
+const frontendUrl = process.env.FRONTEND_URL;
+
 const SECRET_KEY = process.env.JWT_SECRET as string;
 const TOKEN_EXPIRATION = '24h';
 
@@ -14,6 +16,15 @@ export const handleSignup = async (req: Request, res: Response) => {
   const { firstName, lastName, email } = req.body as CreateCustomerBody;
 
   try {
+    // check if email is already registered
+    const existingCustomer = await prisma.customer.findUnique({
+      where:{email},
+    });
+
+    if (existingCustomer){
+      res.status(400).json({message: "This email is alreay registered to another user."});
+    }
+
     const token = jwt.sign({ firstName, lastName, email }, SECRET_KEY, {
       expiresIn: TOKEN_EXPIRATION,
     });
@@ -72,7 +83,8 @@ export const verifyEmail = async (req:Request, res:Response)=>{
           subject:`${payload.firstName} ${payload.lastName} signed up`,
           text:`${payload.firstName} ${payload.lastName} signed up. email is ${payload.email}`,
       });
-        res.json(user);
+        res.redirect(`${frontendUrl}/thank-you?name=${encodeURIComponent(user.firstName)}`);;
+
     } catch (error){
         if (error instanceof jwt.TokenExpiredError) {
             res.status(400).json({ message: "Token expired" });

@@ -26,8 +26,7 @@ services:
       EMAIL_USER: ${EMAIL_USER}
       EMAIL_PASS: ${EMAIL_PASS}
       JWT_SECRET: ${JWT_SECRET}
-    env_file:
-      - ./backend/.env
+
     command: >
       sh -c "
       npx wait-on tcp:db:5432 &&
