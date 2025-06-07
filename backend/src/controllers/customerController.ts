@@ -75,7 +75,7 @@ export const verifyEmail = async (req:Request, res:Response)=>{
             from:config.emailUser,
             to:payload.email,
             subject:"Welcome",
-            text:`Hello ${payload.firstName}, thanks for signing up`,
+            text:`Hello ${payload.firstName}, thanks for reaching out to us. A team member will be in touch.`,
         });
         await transporter.sendMail({
           from:config.emailUser,
