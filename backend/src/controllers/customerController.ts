@@ -23,6 +23,7 @@ export const handleSignup = async (req: Request, res: Response) => {
 
     if (existingCustomer){
       res.status(400).json({message: "This email is alreay registered to another user."});
+      return;
     }
 
     const token = jwt.sign({ firstName, lastName, email }, SECRET_KEY, {
