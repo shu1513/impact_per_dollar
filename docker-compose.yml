@@ -4,7 +4,7 @@ services:
     build: 
       context: ./frontend
       args:
-        VITE_API_URL: "http://localhost:3000"
+        VITE_API_URL: "/api"
 
     ports:
       - "5173:5173"
@@ -42,3 +42,12 @@ services:
       POSTGRES_DB: mydb
     ports:
       - "5433:5432"
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
