@@ -7,6 +7,7 @@ import { isEmailVerificationPayload } from '../utils/typeGuards';
 import { prisma } from '../config/prisma';
 
 const frontendUrl = process.env.FRONTEND_URL;
+const siteUrl = process.env.SITE_URL;
 
 const SECRET_KEY = process.env.JWT_SECRET as string;
 const TOKEN_EXPIRATION = '24h';
@@ -30,7 +31,7 @@ export const handleSignup = async (req: Request, res: Response) => {
       expiresIn: TOKEN_EXPIRATION,
     });
 
-    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+    const verificationLink = `http://${siteUrl}/verify-email?token=${token}`;
 
     await transporter.sendMail({
       from: config.emailUser,
@@ -84,7 +85,7 @@ export const verifyEmail = async (req:Request, res:Response)=>{
           subject:`${payload.firstName} ${payload.lastName} signed up`,
           text:`${payload.firstName} ${payload.lastName} signed up. email is ${payload.email}`,
       });
-        res.redirect(`${frontendUrl}/thank-you?name=${encodeURIComponent(user.firstName)}`);;
+        res.redirect(`http://${frontendUrl}/thank-you?name=${encodeURIComponent(user.firstName)}`);;
 
     } catch (error){
         if (error instanceof jwt.TokenExpiredError) {
