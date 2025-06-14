@@ -13,6 +13,10 @@ const SignupForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!API_URL) {
+      throw Error(" no api url")
+    }
+    
     try {
       await axios.post(`${API_URL}/signup`, {
         firstName,
