@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { CreateCustomerBody } from '../types/customer';
 import jwt from 'jsonwebtoken';
-import { transporter } from '../mail/transporter';
 import { config } from '../config/env';
 import { isEmailVerificationPayload } from '../utils/typeGuards';
 import { prisma } from '../config/prisma';
+import { sendVerificationEmail, sendWelcomeEmail, sendInformSignupEmail } from '../utils/email.server';
 
 const frontendUrl = process.env.FRONTEND_URL;
 const siteUrl = process.env.SITE_URL;
@@ -33,12 +33,7 @@ export const handleSignup = async (req: Request, res: Response) => {
 
     const verificationLink = `http://${siteUrl}/verify-email?token=${token}`;
 
-    await transporter.sendMail({
-      from: config.emailUser,
-      to: email,
-      subject: 'Verify your email',
-      text: `Hello ${firstName},\n\nPlease click on the link to verify your email:\n${verificationLink}`,
-    });
+    await sendVerificationEmail(email,verificationLink, firstName);
 
     res.status(200).json({ message: 'Verification email sent' });
   } catch (error) {
@@ -73,18 +68,8 @@ export const verifyEmail = async (req:Request, res:Response)=>{
                 emailVerified:true,
             },
         });
-        await transporter.sendMail({
-            from:config.emailUser,
-            to:payload.email,
-            subject:"Welcome",
-            text:`Hello ${payload.firstName}, thanks for reaching out to us. A team member will be in touch.`,
-        });
-        await transporter.sendMail({
-          from:config.emailUser,
-          to:config.emailUser,
-          subject:`${payload.firstName} ${payload.lastName} signed up`,
-          text:`${payload.firstName} ${payload.lastName} signed up. email is ${payload.email}`,
-      });
+        await sendWelcomeEmail(payload.email, payload.firstName);
+        await sendInformSignupEmail(payload.firstName,payload.lastName,payload.email);
         res.redirect(`http://${frontendUrl}/thank-you?name=${encodeURIComponent(user.firstName)}`);;
 
     } catch (error){
