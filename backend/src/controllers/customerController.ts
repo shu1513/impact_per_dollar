@@ -70,7 +70,7 @@ export const verifyEmail = async (req:Request, res:Response)=>{
         });
         await sendWelcomeEmail(payload.email, payload.firstName);
         await sendInformSignupEmail(payload.firstName,payload.lastName,payload.email);
-        res.redirect(`http://${frontendUrl}/thank-you?name=${encodeURIComponent(user.firstName)}`);;
+        res.redirect(`${frontendUrl}/thank-you?name=${encodeURIComponent(user.firstName)}`);;
 
     } catch (error){
         if (error instanceof jwt.TokenExpiredError) {
