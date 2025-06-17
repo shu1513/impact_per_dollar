@@ -1,25 +1,29 @@
-FROM node:23.9.0
+# frontend/Dockerfile
 
-WORKDIR /usr/src/app
+# ---- Build Stage ----
+FROM node:18-alpine AS builder
 
-# Copy package files first for layer caching
+WORKDIR /app
 COPY package.json package-lock.json ./
-
-# Install dependencies
 RUN npm ci
 
+# Copy the rest of your app and set environment variable
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+COPY . .
 RUN echo "VITE_API_URL=$VITE_API_URL" > .env
 
-# Copy rest of the code
-COPY . .
-
-# Build TypeScript
+# Build for production
 RUN npm run build
 
-# Expose app port (optional)
-EXPOSE 5173
+# ---- Serve Stage ----
+FROM nginx:stable-alpine
 
-# Start app
-CMD ["npm", "run", "dev"]
+# Copy built files from previous stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Optional: custom nginx config for SPA routing
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
