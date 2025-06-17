@@ -31,31 +31,42 @@ export async function sendVerificationEmail(to: string, verificationLink: string
  * Send the welcome email.
  */
 export async function sendWelcomeEmail(to: string, firstName: string) {
-  await resend.emails.send({
-    from: `"Team Impact Per Dollar" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: 'Welcome to Impact per Dollar',
-    text: `Hello ${firstName}, thanks for reaching out to us. A team member will be in touch.`,
-    html: `
-      <div>
-        <h1>Welcome to Impact per Dollar</h1>
-        <p>Hello ${firstName}, thanks for reaching out to us. A team member will be in touch in 72 hours.</p>
-      </div>
-    `,
-  });
+  try {
+    await resend.emails.send({
+      from: `"Team Impact Per Dollar" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Welcome to Impact per Dollar',
+      text: `Hello ${firstName}, thanks for reaching out to us. A team member will be in touch.`,
+      html: `
+        <div>
+          <h1>Welcome to Impact per Dollar</h1>
+          <p>Hello ${firstName}, thanks for reaching out to us. A team member will be in touch in 72 hours.</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    throw error;
+  }
 }
 
-export async function sendInformSignupEmail( firstName: string, lastName:string, email:string) {
-  await resend.emails.send({
-    from: `"Team Impact Per Dollar" <${process.env.EMAIL_USER}>`,
-    to: `${process.env.HOST_EMAIL}`,
-    subject: `${firstName} ${lastName} has signed up`,
-    text: `${firstName} ${lastName} at ${email} has signed up.`,
-    html: `
-      <div>
-        <h1>${firstName} ${lastName} has signed up</h1>
-        <p>H${firstName} ${lastName} at ${email} has signed up.</p>
-      </div>
-    `,
-  });
+export async function sendInformSignupEmail(firstName: string, lastName: string, email: string) {
+  try {
+    await resend.emails.send({
+      from: `"Team Impact Per Dollar" <${process.env.EMAIL_USER}>`,
+      to: `${process.env.HOST_EMAIL}`,
+      subject: `${firstName} ${lastName} has signed up`,
+      text: `${firstName} ${lastName} at ${email} has signed up.`,
+      html: `
+        <div>
+          <h1>${firstName} ${lastName} has signed up</h1>
+          <p>${firstName} ${lastName} at ${email} has signed up.</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error('Error sending signup notification email:', error);
+    throw error;
+  }
 }
+
