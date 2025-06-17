@@ -31,7 +31,7 @@ export const handleSignup = async (req: Request, res: Response) => {
       expiresIn: TOKEN_EXPIRATION,
     });
 
-    const verificationLink = `http://${siteUrl}/verify-email?token=${token}`;
+    const verificationLink = `${siteUrl}/verify-email?token=${token}`;
 
     await sendVerificationEmail(email,verificationLink, firstName);
 
