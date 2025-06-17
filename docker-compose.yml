@@ -8,11 +8,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:5173"  # Host port 5173 → Container port 5173
-    command: >
-      sh -c "
-      npm install &&
-      npm run dev -- --host"
+      - "5173:80
 
   backend:
     build: ./backend
